@@ -128,7 +128,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
 
   ShortAnswerList.prototype.createSubmissionButton = function () {
     var self = this;
-    var $saveButton = $("<div>", {
+    var $submitButton = $("<div>", {
       class: "h5p-joubelui-button h5p-short-answer-list-save-button",
       text: "Submit",
     }).appendTo(self.$inner);
@@ -140,7 +140,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
       .appendTo(self.$inner)
       .hide();
 
-    $saveButton.on("click", function () {
+    $submitButton.on("click", function () {
       self.triggerAnsweredEvents();
       const score = self.getScore();
       const maxScore = self.pageInstances.length;
