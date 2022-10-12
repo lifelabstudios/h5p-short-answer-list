@@ -11,13 +11,16 @@
       "label": "Element type",
       "importance": "high",
       "description": "Library for this page.",
-      "options": [
-        "H5P.Text 1.1",
-        "H5P.TextInputField 1.2",
-        "H5P.Image 1.1",
-        "H5P.Accordion 1.0"
-      ]
+      "options": ["H5P.Text 1.1", "H5P.TextInputField 1.2", "H5P.Image 1.1"]
     }
+  },
+  {
+    "name": "completionCriteria",
+    "label": "Completion Criteria",
+    "importance": "high",
+    "type": "number",
+    "description": "The number of questions needed to be answered in order to mark this activity as successfully completed",
+    "default": 0
   },
   {
     "name": "helpTextLabel",
@@ -36,18 +39,6 @@
     "description": "Here you can fill in additional information for the user, which will be available when clicked.",
     "enterMode": "p",
     "optional": true,
-    "tags": [
-      "strong",
-      "em",
-      "u",
-      "a",
-      "ul",
-      "ol",
-      "h2",
-      "h3",
-      "hr",
-      "pre",
-      "code"
-    ]
+    "tags": ["strong", "em", "u", "a", "ul", "ol", "h2", "h3", "hr"]
   }
 ]

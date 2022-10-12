@@ -1,7 +1,6 @@
-H5P Standard Page
-==========
+# H5P Short Answer List
 
-Standard list page where you can add multiple library elements.
+An h5p library to support a single page of short answers
 
 ## License
 
