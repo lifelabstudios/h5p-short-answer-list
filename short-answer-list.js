@@ -34,6 +34,8 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
       params
     );
 
+    this.pageInstances = [];
+
     /**
      * Implements resume (save content state)
      *
@@ -54,7 +56,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
   }
 
   // Setting up inheritance
-  ShortAnswerList.prototype = Object.create(EventDispatcher.prototype);
+  ShortAnswerList.prototype = Object.create(H5P.EventDispatcher.prototype);
   ShortAnswerList.prototype.constructor = ShortAnswerList;
 
   /**
@@ -116,10 +118,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
 
     if (this.params.helpText !== undefined && this.params.helpText.length) {
       self.$helpButton.on("click", function () {
-        self.trigger("open-help-dialog", {
-          title: self.params.title,
-          helpText: self.params.helpText,
-        });
+        self.showHelpDialog();
       });
     } else {
       self.$helpButton.remove();
@@ -145,8 +144,17 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
       const score = self.getScore();
       const maxScore = self.pageInstances.length;
       const success = score >= self.params.completionCriteria;
-      success ? self.triggerXAPIScored(score, maxScore, "completed", true, success) : self.triggerXAPIScored(score, maxScore, "experienced", false, !success);
+      success
+        ? self.triggerXAPIScored(score, maxScore, "completed", true, success)
+        : self.triggerXAPIScored(
+            score,
+            maxScore,
+            "experienced",
+            false,
+            !success
+          );
       $savedText.show();
+      self.trigger("resize");
       $savedText.fadeOut(3000);
     });
   };
@@ -160,6 +168,37 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
     });
 
     return score;
+  };
+
+  ShortAnswerList.prototype.getMaxScore = function () {
+    let maxScore = 0;
+    this.pageInstances.forEach(function (elementInstance) {
+      if (elementInstance.libraryInfo.machineName === "H5P.TextInputField") {
+        maxScore++;
+      }
+    });
+
+    return maxScore;
+  };
+
+  ShortAnswerList.prototype.showHelpDialog = function () {
+    var self = this;
+
+    var helpTextDialog = new JoubelUI.createHelpTextDialog(
+      self.params.helpTextLabel,
+      self.params.helpText,
+      "Close"
+    );
+
+    // Handle closing of the dialog
+    helpTextDialog.on("closed", function () {
+      // Set focus back on the page
+      self.focus();
+    });
+
+    this.$inner.append(helpTextDialog.getElement());
+
+    helpTextDialog.focus();
   };
 
   /**

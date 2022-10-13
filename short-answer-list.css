@@ -21,3 +21,36 @@
 .h5p-short-answer-list .h5p-accordion .h5p-panel-content {
   padding: 0;
 }
+
+.h5p-short-answer-list .page-header {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  border-bottom: 1px solid #ccc;
+  justify-content: space-between;
+  padding: 0.5em 0;
+  outline: none;
+  /* Override focus effect */
+}
+
+
+.h5p-short-answer-list .page-title {
+  font-size: 18px;
+  color: #333;
+}
+
+.h5p-short-answer-list .page-help-text {
+  color: #1a73d9;
+  cursor: pointer;
+  font-size: 0.8em;
+  font-family: Sans-Serif;
+  font-size: 1em;
+  background: none;
+  border: 0;
+  overflow: visible;
+  padding: 0;
+}
+
+.h5p-short-answer-list .page-help-text:hover {
+  color: #1a4773;
+}
