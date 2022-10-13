@@ -127,16 +127,21 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
 
   ShortAnswerList.prototype.createSubmissionButton = function () {
     var self = this;
-    var $submitButton = $("<div>", {
-      class: "h5p-joubelui-button h5p-short-answer-list-save-button",
-      text: "Submit",
+
+    var $footerContainer = $("<div>", {
+      class: "h5p-short-answer-footer",
     }).appendTo(self.$inner);
+
+    var $submitButton = $("<div>", {
+      class: "h5p-joubelui-button h5p-short-answer-list-submit-button",
+      text: "Submit",
+    }).appendTo($footerContainer);
 
     var $savedText = $("<div>", {
       class: "h5p-short-answer-list-saved-message",
       text: "Successfully saved progress!",
     })
-      .appendTo(self.$inner)
+      .appendTo($footerContainer)
       .hide();
 
     $submitButton.on("click", function () {
@@ -154,7 +159,6 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
             !success
           );
       $savedText.show();
-      self.trigger("resize");
       $savedText.fadeOut(3000);
     });
   };

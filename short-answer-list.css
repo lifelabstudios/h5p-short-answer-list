@@ -54,3 +54,14 @@
 .h5p-short-answer-list .page-help-text:hover {
   color: #1a4773;
 }
+
+.h5p-short-answer-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.h5p-joubelui-button:first-child {
+  margin: 0 0.5em 0em 0;
+}
