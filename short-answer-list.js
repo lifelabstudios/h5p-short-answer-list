@@ -132,8 +132,9 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
       class: "h5p-short-answer-footer",
     }).appendTo(self.$inner);
 
-    var $submitButton = $("<div>", {
+    var $submitButton = $("<button>", {
       class: "h5p-joubelui-button h5p-short-answer-list-submit-button",
+      type: "submit",
       text: "Submit",
     }).appendTo($footerContainer);
 
@@ -147,7 +148,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
     $submitButton.on("click", function () {
       self.triggerAnsweredEvents();
       const score = self.getScore();
-      const maxScore = self.pageInstances.length;
+      const maxScore = self.getMaxScore();
       const success = score >= self.params.completionCriteria;
       success
         ? self.triggerXAPIScored(score, maxScore, "completed", true, success)
@@ -175,20 +176,15 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
   };
 
   ShortAnswerList.prototype.getMaxScore = function () {
-    let maxScore = 0;
-    this.pageInstances.forEach(function (elementInstance) {
-      if (elementInstance.libraryInfo.machineName === "H5P.TextInputField") {
-        maxScore++;
-      }
-    });
-
-    return maxScore;
+    return this.pageInstances.filter(
+      (instance) => instance.libraryInfo.machineName === "H5P.TextInputField"
+    ).length;
   };
 
   ShortAnswerList.prototype.showHelpDialog = function () {
     var self = this;
 
-    var helpTextDialog = new JoubelUI.createHelpTextDialog(
+    let helpTextDialog = new JoubelUI.createHelpTextDialog(
       self.params.helpTextLabel,
       self.params.helpText,
       "Close"
@@ -209,12 +205,12 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * Retrieves input array.
    */
   ShortAnswerList.prototype.getInputArray = function () {
-    var inputArray = [];
-    this.pageInstances.forEach(function (elementInstance) {
+    let inputArray = [];
+    for (const elementInstance of this.pageInstances) {
       if (elementInstance.libraryInfo.machineName === "H5P.TextInputField") {
         inputArray.push(elementInstance.getInput());
       }
-    });
+    }
 
     return inputArray;
   };
@@ -224,14 +220,14 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * @returns {boolean} True if all required inputs are filled.
    */
   ShortAnswerList.prototype.requiredInputsIsFilled = function () {
-    var requiredInputsIsFilled = true;
-    this.pageInstances.forEach(function (elementInstance) {
+    let requiredInputsIsFilled = true;
+    for (const elementInstance of this.pageInstances) {
       if (elementInstance.libraryInfo.machineName === "H5P.TextInputField") {
         if (!elementInstance.isRequiredInputFilled()) {
           requiredInputsIsFilled = false;
         }
       }
-    });
+    }
 
     return requiredInputsIsFilled;
   };
@@ -240,13 +236,13 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * Mark required input fields.
    */
   ShortAnswerList.prototype.markRequiredInputFields = function () {
-    this.pageInstances.forEach(function (elementInstance) {
+    for (const elementInstance of this.pageInstances) {
       if (elementInstance.libraryInfo.machineName === "H5P.TextInputField") {
         if (!elementInstance.isRequiredInputFilled()) {
           elementInstance.markEmptyField();
         }
       }
-    });
+    }
   };
 
   /**
@@ -254,9 +250,9 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * @param state
    */
   ShortAnswerList.prototype.setPreviousState = function (state) {
-    var inputIndex = 0;
+    let inputIndex = 0;
 
-    this.pageInstances.forEach(function (instance) {
+    for (const instance of this.pageInstances) {
       if (
         instance.libraryInfo.machineName === "H5P.TextInputField" &&
         instance.$inputField !== undefined
@@ -267,7 +263,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
 
         inputIndex++;
       }
-    });
+    }
   };
 
   /**
@@ -293,11 +289,11 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * Triggers an 'answered' xAPI event for all inputs
    */
   ShortAnswerList.prototype.triggerAnsweredEvents = function () {
-    this.pageInstances.forEach(function (elementInstance) {
+    for (const elementInstance of this.pageInstances) {
       if (elementInstance.triggerAnsweredEvent) {
         elementInstance.triggerAnsweredEvent();
       }
-    });
+    }
   };
 
   /**
@@ -305,13 +301,13 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * @returns {Array}
    */
   ShortAnswerList.prototype.getXAPIDataFromChildren = function () {
-    var children = [];
+    let children = [];
 
-    this.pageInstances.forEach(function (elementInstance) {
+    for (const elementInstance of this.pageInstances) {
       if (elementInstance.getXAPIData) {
         children.push(elementInstance.getXAPIData());
       }
-    });
+    }
 
     return children;
   };
@@ -321,7 +317,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * @return {Object}
    */
   ShortAnswerList.prototype.getxAPIDefinition = function () {
-    var definition = {};
+    let definition = {};
     var self = this;
 
     definition.interactionType = "compound";
@@ -340,7 +336,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * Add the question itself to the definition part of an xAPIEvent
    */
   ShortAnswerList.prototype.addQuestionToXAPI = function (xAPIEvent) {
-    var definition = xAPIEvent.getVerifiedStatementValue([
+    let definition = xAPIEvent.getVerifiedStatementValue([
       "object",
       "definition",
     ]);
@@ -354,7 +350,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * @see contract at {@link https://h5p.org/documentation/developers/contracts#guides-header-6}
    */
   ShortAnswerList.prototype.getXAPIData = function () {
-    var xAPIEvent = this.createXAPIEventTemplate("compound");
+    let xAPIEvent = this.createXAPIEventTemplate("compound");
     this.addQuestionToXAPI(xAPIEvent);
     return {
       statement: xAPIEvent.data.statement,
