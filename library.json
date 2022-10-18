@@ -1,25 +1,25 @@
 {
-  "title": "Standard page",
+  "title": "Short Answer List",
   "description": "Standard list page where you can add multiple library element .",
   "majorVersion": 1,
-  "minorVersion": 5,
-  "patchVersion": 11,
-  "runnable": 0,
-  "author": "Joubel",
+  "minorVersion": 0,
+  "patchVersion": 0,
+  "runnable": 1,
+  "author": "Joubel, Rider Griffin",
   "license": "MIT",
-  "machineName": "H5P.StandardPage",
+  "machineName": "H5P.ShortAnswerList",
   "coreApi": {
     "majorVersion": 1,
     "minorVersion": 19
   },
   "preloadedCss": [
     {
-      "path": "standard-page.css"
+      "path": "short-answer-list.css"
     }
   ],
   "preloadedJs": [
     {
-      "path": "standard-page.js"
+      "path": "short-answer-list.js"
     }
   ],
   "preloadedDependencies": [
@@ -42,6 +42,11 @@
       "machineName": "H5P.TextInputField",
       "majorVersion": 1,
       "minorVersion": 2
+    },
+    {
+      "machineName": "H5P.JoubelUI",
+      "majorVersion": 1,
+      "minorVersion": 3
     }
   ]
 }
