@@ -51,6 +51,10 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
         state[index] = input.value || "";
       });
 
+      if(state.length == 0 && this.extras && this.extras.previousState !== "undefined") {
+        state = this.extras.previousState;
+      }
+
       return state;
     };
   }

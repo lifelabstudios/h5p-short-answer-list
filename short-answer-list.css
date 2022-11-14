@@ -62,6 +62,6 @@
   align-items: center;
 }
 
-.h5p-joubelui-button:first-child {
+.h5p-short-answer-list .h5p-joubelui-button:first-child {
   margin: 0 0.5em 0em 0;
 }
