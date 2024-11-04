@@ -16,12 +16,13 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * @param {Number} id Content identification
    * @returns {Object} ShortAnswerList ShortAnswerList instance
    */
-  function ShortAnswerList(params, id, extras) {
+  function ShortAnswerList(params, id, contentData) {
     H5P.EventDispatcher.call(this);
 
     this.$ = $(this);
     this.id = id;
-    this.extras = extras;
+    this.contentData = contentData;
+    this.answersLocked = false;
 
     // Set default behavior.
     this.params = $.extend(
@@ -45,15 +46,16 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
      */
     this.getCurrentState = function () {
       var inputs = this.getInputArray(this.pageInstances),
-        state = [];
+        answers = [];
 
       inputs.forEach(function (input, index) {
-        state[index] = input.value || "";
+        answers[index] = input.value || "";
       });
 
-      if(state.length == 0 && this.extras && this.extras.previousState !== "undefined") {
-        state = this.extras.previousState;
-      }
+      const state = {
+        answers: answers,
+        answersLocked: this.answersLocked,
+      };
 
       return state;
     };
@@ -75,14 +77,53 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
       class: MAIN_CONTAINER,
     }).appendTo($container);
 
-    var ShortAnswerListTemplate =
-      '<div class="page-header" role="heading" tabindex="-1">' +
-      ' <div class="page-title">{{{title}}}</div>' +
-      ' <button class="page-help-text">{{{helpTextLabel}}}</button>' +
-      "</div>";
+    if (!self.params.allowEditAfterSubmission) {
+      const confirmationPopup = `<div class="confirmation-dialog">
+      <div class="confirmation-dialog-content">
+        <div class="confirmation-dialog-header"><h3 class="title">Are you sure you want to submit?</h3></div>
+        <div class="confirmation-dialog-body"><p class="message">After clicking "Submit", you will NOT be able to change your answers.</p></div>
+        <div class="confirmation-dialog-footer">
+          <button class="confirmation-dialog-cancel-button h5p-joubelui-button h5p-button">Cancel</button>
+          <button class="confirmation-dialog-submit-button h5p-joubelui-button h5p-button">Submit</button>
+        </div>
+      </div>
+    </div>`;
+
+      self.$inner.append(Mustache.render(confirmationPopup));
+      self.$inner
+        .find(".confirmation-dialog-cancel-button")
+        .on("click", function () {
+          self.$inner.find(".confirmation-dialog").removeClass("active");
+        });
+      self.$inner
+        .find(".confirmation-dialog-submit-button")
+        .on("click", function () {
+          self.calculateAndSubmitScore();
+          self.$inner.find(".confirmation-dialog").removeClass("active");
+          self.lockAllResponses();
+        });
+    }
+
+    var ShortAnswerListTemplate = `
+        <div class="page-header" role="heading" tabindex="-1">
+            <div class="page-title">{{{title}}}</div>
+            <button class="page-help-text">{{{helpTextLabel}}}</button>
+        </div>`;
 
     /*global Mustache */
     self.$inner.append(Mustache.render(ShortAnswerListTemplate, self.params));
+
+    var requiredFieldWarning = `<p class="required-field-warning">
+            <i>Any question marked with<span style="color: red"> * </span> indicates the question must be answered before submission.</i>
+          </p>`;
+
+    self.$requiredFieldWarning = $("<div>", {
+      class: "required-field-warning-container",
+    })
+      .append(Mustache.render(requiredFieldWarning))
+      .hide();
+
+    self.$inner.append(self.$requiredFieldWarning);
 
     self.$pageTitle = self.$inner.find(".page-header");
     self.$helpButton = self.$inner.find(".page-help-text");
@@ -90,6 +131,21 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
     self.createHelpTextButton();
 
     this.pageInstances = [];
+
+    self.$footerContainer = $("<div>", {
+      class: "h5p-short-answer-footer",
+    });
+
+    self.$submitButton = $("<button>", {
+      class: "h5p-joubelui-button h5p-short-answer-list-submit-button",
+      type: "submit",
+      text: "Submit",
+    });
+
+    self.$savedText = $("<div>", {
+      class: "h5p-short-answer-list-saved-message",
+      text: "Successfully saved progress!",
+    });
 
     this.params.elementList.forEach(function (element) {
       var $elementContainer = $("<div>", {
@@ -102,15 +158,47 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
         self.trigger("resize");
       });
 
+      if (elementInstance.libraryInfo.machineName === "H5P.TextInputField") {
+        elementInstance.on("textbox-changed", () => {
+          if (self.requiredInputsIsFilled()) {
+            self.$submitButton.prop("disabled", false);
+            self.$submitButton.removeClass("disabled-finish-button");
+          } else {
+            self.$submitButton.prop("disabled", true);
+            self.$submitButton.addClass("disabled-finish-button");
+          }
+        });
+      }
+
+      if (elementInstance.libraryInfo.machineName === "H5P.DropdownSelect") {
+        elementInstance.on("select-box-changed", () => {
+          if (self.requiredInputsIsFilled()) {
+            self.$submitButton.prop("disabled", false);
+            self.$submitButton.removeClass("disabled-finish-button");
+          } else {
+            self.$submitButton.prop("disabled", true);
+            self.$submitButton.addClass("disabled-finish-button");
+          }
+        });
+      }
+
       elementInstance.attach($elementContainer);
 
       self.pageInstances.push(elementInstance);
     });
 
+    self.$footerContainer.appendTo(self.$inner);
+    self.$submitButton.appendTo(self.$footerContainer);
+    self.$savedText.appendTo(self.$footerContainer).hide();
+
     self.createSubmissionButton();
 
-    if (this.extras && this.extras.previousState !== "undefined") {
-      self.setPreviousState(this.extras.previousState);
+    if (self.hasRequiredFields()) {
+      self.$requiredFieldWarning.show();
+    }
+
+    if (this.contentData && this.contentData.previousState !== "undefined") {
+      self.setPreviousState(this.contentData.previousState);
     }
   };
 
@@ -132,40 +220,61 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
   ShortAnswerList.prototype.createSubmissionButton = function () {
     var self = this;
 
-    var $footerContainer = $("<div>", {
-      class: "h5p-short-answer-footer",
-    }).appendTo(self.$inner);
+    if (self.hasRequiredFields()) {
+      self.$submitButton.prop("disabled", true);
+      self.$submitButton.addClass("disabled-finish-button");
+    }
 
-    var $submitButton = $("<button>", {
-      class: "h5p-joubelui-button h5p-short-answer-list-submit-button",
-      type: "submit",
-      text: "Submit",
-    }).appendTo($footerContainer);
+    if (self.params.allowEditAfterSubmission) {
+      self.$submitButton.on("click", function () {
+        self.calculateAndSubmitScore();
+      });
+    } else {
+      self.$submitButton.on("click", function () {
+        self.$inner
+          .find(".confirmation-dialog")
+          .addClass("confirmation-dialog active");
+      });
+    }
+  };
 
-    var $savedText = $("<div>", {
-      class: "h5p-short-answer-list-saved-message",
-      text: "Successfully saved progress!",
-    })
-      .appendTo($footerContainer)
-      .hide();
+  ShortAnswerList.prototype.calculateAndSubmitScore = function () {
+    var self = this;
+    self.triggerAnsweredEvents();
+    const score = self.getScore();
+    const maxScore = self.getMaxScore();
+    self.triggerXAPIScored(score, maxScore, "completed", true, true);
+    self.$savedText.show();
+    self.$savedText.fadeOut(3000);
+    self.trigger("free-response-completed");
+  };
 
-    $submitButton.on("click", function () {
-      self.triggerAnsweredEvents();
-      const score = self.getScore();
-      const maxScore = self.getMaxScore();
-      const success = score >= self.params.completionCriteria;
-      success
-        ? self.triggerXAPIScored(score, maxScore, "completed", true, success)
-        : self.triggerXAPIScored(
-            score,
-            maxScore,
-            "experienced",
-            false,
-            !success
-          );
-      $savedText.show();
-      $savedText.fadeOut(3000);
+  ShortAnswerList.prototype.lockAllResponses = function () {
+    var self = this;
+    this.answersLocked = true;
+    self.$inner.find(".h5p-text-input-field-textfield").each(function () {
+      $(this).attr("readonly", "true");
+      $(this).css({ "font-style": "italic" });
     });
+    self.$inner.find(".h5p-dropdown-selector").each(function () {
+      $(this).attr("disabled", "disabled");
+      $(this).toggleClass("no-dropdown-arrow");
+    });
+    self.$submitButton.hide();
+  };
+
+  ShortAnswerList.prototype.hasRequiredFields = function () {
+    for (const pageInstance of this.pageInstances) {
+      if (
+        pageInstance.libraryInfo.machineName === "H5P.TextInputField" ||
+        pageInstance.libraryInfo.machineName === "H5P.DropdownSelect"
+      ) {
+        if (pageInstance.params.requiredField) {
+          return true;
+        }
+      }
+    }
+    return false;
   };
 
   ShortAnswerList.prototype.getScore = function () {
@@ -180,9 +289,14 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
   };
 
   ShortAnswerList.prototype.getMaxScore = function () {
-    return this.pageInstances.filter(
-      (instance) => instance.libraryInfo.machineName === "H5P.TextInputField"
-    ).length;
+    return (
+      this.pageInstances.filter(
+        (instance) => instance.libraryInfo.machineName === "H5P.TextInputField"
+      ).length +
+      this.pageInstances.filter(
+        (instance) => instance.libraryInfo.machineName === "H5P.DropdownSelect"
+      ).length
+    );
   };
 
   ShortAnswerList.prototype.showHelpDialog = function () {
@@ -211,7 +325,10 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
   ShortAnswerList.prototype.getInputArray = function () {
     let inputArray = [];
     for (const elementInstance of this.pageInstances) {
-      if (elementInstance.libraryInfo.machineName === "H5P.TextInputField") {
+      if (
+        elementInstance.libraryInfo.machineName === "H5P.TextInputField" ||
+        elementInstance.libraryInfo.machineName === "H5P.DropdownSelect"
+      ) {
         inputArray.push(elementInstance.getInput());
       }
     }
@@ -226,7 +343,10 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
   ShortAnswerList.prototype.requiredInputsIsFilled = function () {
     let requiredInputsIsFilled = true;
     for (const elementInstance of this.pageInstances) {
-      if (elementInstance.libraryInfo.machineName === "H5P.TextInputField") {
+      if (
+        elementInstance.libraryInfo.machineName === "H5P.TextInputField" ||
+        elementInstance.libraryInfo.machineName === "H5P.DropdownSelect"
+      ) {
         if (!elementInstance.isRequiredInputFilled()) {
           requiredInputsIsFilled = false;
         }
@@ -241,7 +361,10 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    */
   ShortAnswerList.prototype.markRequiredInputFields = function () {
     for (const elementInstance of this.pageInstances) {
-      if (elementInstance.libraryInfo.machineName === "H5P.TextInputField") {
+      if (
+        elementInstance.libraryInfo.machineName === "H5P.TextInputField" ||
+        elementInstance.libraryInfo.machineName === "H5P.DropdownSelect"
+      ) {
         if (!elementInstance.isRequiredInputFilled()) {
           elementInstance.markEmptyField();
         }
@@ -254,6 +377,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    * @param state
    */
   ShortAnswerList.prototype.setPreviousState = function (state) {
+    var self = this;
     let inputIndex = 0;
 
     for (const instance of this.pageInstances) {
@@ -261,12 +385,34 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
         instance.libraryInfo.machineName === "H5P.TextInputField" &&
         instance.$inputField !== undefined
       ) {
-        if (state && state[inputIndex] && !instance.$inputField.val()) {
-          instance.$inputField.val(state[inputIndex]);
+        if (
+          state &&
+          state.answers?.[inputIndex] &&
+          !instance.$inputField.val()
+        ) {
+          instance.$inputField.val(state.answers?.[inputIndex]);
         }
 
         inputIndex++;
       }
+      if (
+        instance.libraryInfo.machineName === "H5P.DropdownSelect" &&
+        instance.$selector !== undefined
+      ) {
+        if (state && state.answers?.[inputIndex]) {
+          instance.$selector.val(state.answers?.[inputIndex]);
+        }
+        inputIndex++;
+      }
+    }
+
+    if (state?.answersLocked) {
+      self.lockAllResponses();
+    }
+
+    if (state && self.requiredInputsIsFilled()) {
+      self.$submitButton.prop("disabled", false);
+      self.$submitButton.removeClass("disabled-finish-button");
     }
   };
 
@@ -283,8 +429,10 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
    */
   ShortAnswerList.prototype.getTitle = function () {
     return H5P.createTitle(
-      this.extras && this.extras.metadata && this.extras.metadata.title
-        ? this.extras.metadata.title
+      this.contentData &&
+        this.contentData.metadata &&
+        this.contentData.metadata.title
+        ? this.contentData.metadata.title
         : "Instructions"
     );
   };

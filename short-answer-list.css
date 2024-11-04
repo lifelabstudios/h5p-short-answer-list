@@ -65,3 +65,85 @@
 .h5p-short-answer-list .h5p-joubelui-button:first-child {
   margin: 0 0.5em 0em 0;
 }
+
+.disabled-finish-button {
+  background: lightgray;
+}
+
+.disabled-finish-button:hover {
+  background: #ddd;
+}
+
+.no-dropdown-arrow {
+  background: none !important;
+  padding-right: 10px !important;
+  color: black !important;
+  font-style: italic !important;
+}
+
+
+.confirmation-dialog {
+  position: absolute;
+  top: 0;
+  z-index: 11;
+  width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  -webkit-transition: -webkit-transform .25s, opacity 1ms .25s;
+  -webkit-transition: opacity 1ms .25s, -webkit-transform .25s;
+  transition: opacity 1ms .25s, -webkit-transform .25s;
+  -o-transition: transform .25s, opacity 1ms .25s;
+  transition: transform .25s, opacity 1ms .25s;
+  transition: transform .25s, opacity 1ms .25s, -webkit-transform .25s;
+  -webkit-transform: translate3d(0, 100%, 0);
+  -ms-transform: translate3d(0, 100%, 0);
+  transform: translate3d(0, 100%, 0);
+}
+
+.confirmation-dialog.active {
+  height: 100%;
+  opacity: 1;
+  -webkit-transition: -webkit-transform .25s;
+  transition: -webkit-transform .25s;
+  -o-transition: transform .25s;
+  transition: transform .25s;
+  transition: transform .25s, -webkit-transform .25s;
+  -webkit-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+.confirmation-dialog a:hover {
+  cursor: pointer;
+}
+
+.confirmation-dialog-content {
+  border-radius: 1em;
+  background-color: #fff;
+  width: 280px;
+  top: 50%;
+  left: 50%;
+  position: absolute;
+  -webkit-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.confirmation-dialog-header, .confirmation-dialog-footer {
+  padding: 15px;
+  position: relative;
+  text-align: center;
+}
+
+.confirmation-dialog-body {
+  padding: 0 15px;
+}
+
+.confirmation-dialog-header .title {
+  margin: 0;
+  padding: 0;
+}

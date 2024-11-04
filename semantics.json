@@ -11,16 +11,13 @@
       "label": "Element type",
       "importance": "high",
       "description": "Library for this page.",
-      "options": ["H5P.Text 1.1", "H5P.TextInputField 1.2", "H5P.Image 1.1"]
+      "options": [
+        "H5P.Text 1.1",
+        "H5P.TextInputField 1.2",
+        "H5P.Image 1.1",
+        "H5P.DropdownSelect 1.0"
+      ]
     }
-  },
-  {
-    "name": "completionCriteria",
-    "label": "Completion Criteria",
-    "importance": "high",
-    "type": "number",
-    "description": "The number of questions needed to be answered in order to mark this activity as successfully completed",
-    "default": 0
   },
   {
     "name": "helpTextLabel",
@@ -40,5 +37,13 @@
     "enterMode": "p",
     "optional": true,
     "tags": ["strong", "em", "u", "a", "ul", "ol", "h2", "h3", "hr"]
+  },
+  {
+    "name": "allowEditAfterSubmission",
+    "type": "boolean",
+    "label": "Allow Response Editing",
+    "importance": "low",
+    "description": "When turned on, will allow for the user to edit/update their responses in the textboxes after submission",
+    "default": false
   }
 ]

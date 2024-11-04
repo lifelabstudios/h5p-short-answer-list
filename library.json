@@ -3,7 +3,7 @@
   "description": "Standard list page where you can add multiple library element .",
   "majorVersion": 1,
   "minorVersion": 0,
-  "patchVersion": 0,
+  "patchVersion": 20,
   "runnable": 1,
   "author": "Joubel, Rider Griffin",
   "license": "MIT",
@@ -47,6 +47,11 @@
       "machineName": "H5P.JoubelUI",
       "majorVersion": 1,
       "minorVersion": 3
+    },
+    {
+      "machineName": "H5P.DropdownSelect",
+      "majorVersion": 1,
+      "minorVersion": 0
     }
   ]
 }
