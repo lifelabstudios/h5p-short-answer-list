@@ -3,7 +3,7 @@
   "description": "Standard list page where you can add multiple library element .",
   "majorVersion": 1,
   "minorVersion": 0,
-  "patchVersion": 20,
+  "patchVersion": 23,
   "runnable": 1,
   "author": "Joubel, Rider Griffin",
   "license": "MIT",

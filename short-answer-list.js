@@ -22,7 +22,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
     this.$ = $(this);
     this.id = id;
     this.contentData = contentData;
-    this.answersLocked = false;
+    this.answersLocked = contentData?.previousState?.answersLocked || false;
 
     // Set default behavior.
     this.params = $.extend(
@@ -45,19 +45,17 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
      * @returns [array] array containing input fields state
      */
     this.getCurrentState = function () {
-      var inputs = this.getInputArray(this.pageInstances),
-        answers = [];
+      const inputs = this.getInputArray();
+      const answers = contentData?.previousState?.answers || [];
 
-      inputs.forEach(function (input, index) {
-        answers[index] = input.value || "";
-      });
+      for (let i = 0; i < inputs.length; i++) {
+        answers[i] = inputs[i].value || "";
+      }
 
-      const state = {
-        answers: answers,
+      return {
+        answers,
         answersLocked: this.answersLocked,
       };
-
-      return state;
     };
   }
 
@@ -197,7 +195,7 @@ H5P.ShortAnswerList = (function ($, EventDispatcher, JoubelUI) {
       self.$requiredFieldWarning.show();
     }
 
-    if (this.contentData && this.contentData.previousState !== "undefined") {
+    if (this.contentData?.previousState != null) {
       self.setPreviousState(this.contentData.previousState);
     }
   };
